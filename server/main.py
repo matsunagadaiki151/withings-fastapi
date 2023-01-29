@@ -1,6 +1,6 @@
 import datetime
 import os
-from typing import Any, Union
+from typing import Any, Dict, Union
 
 import requests
 import uvicorn
