@@ -9,9 +9,12 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
-load_dotenv(verbose=True)
-dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
-load_dotenv(dotenv_path)
+
+def load_env() -> None:
+    load_dotenv(verbose=True)
+    dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
+    load_dotenv(dotenv_path)
+
 
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CUSTOMER_SECRET = os.environ.get("CUSTOMER_SECRET")
@@ -66,8 +69,37 @@ async def get_token(code: Union[str, None]) -> Any:
 
     r_token = requests.post(f"{WBSAPI_URL}/v2/oauth2", data=payload).json()
 
-    access_token = r_token["body"]["access_token"]
+    return r_token
 
+
+@app.get("/refresh_token")
+async def get_measure_infomatoion(refresh_token: Union[str, None]) -> Any:
+
+    if refresh_token is None:
+        return {"error": "refresh_tokenがありません"}
+
+    # GET Some info with this token
+    headers = {"Authorization": "Bearer " + refresh_token}
+    payload = {
+        "action": "requesttoken",
+        "grant_type": "refresh_token",
+        "client_id": CLIENT_ID,
+        "client_secret": CUSTOMER_SECRET,
+        "refresh_token": refresh_token,
+    }
+
+    # List devices of returned user
+    r_token = requests.get(
+        f"{WBSAPI_URL}/v2/oauth2", headers=headers, params=payload
+    ).json()
+
+    return r_token
+
+
+@app.get("/get_measure_info")
+async def get_measure_infomation(access_token: Union[str, None]) -> Any:
+    if access_token is None:
+        return {"error": "access_tokenがありません"}
     now_date = datetime.datetime.now()
     start_date = now_date - relativedelta(months=1)
 
