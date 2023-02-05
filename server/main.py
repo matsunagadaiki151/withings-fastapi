@@ -7,9 +7,12 @@ import uvicorn
 from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from load_env import load_env
+from processer import fetch_weights_from_json
+
+from utils.load_env import load_env
 
 load_env()
+
 
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CUSTOMER_SECRET = os.environ.get("CUSTOMER_SECRET")
@@ -35,8 +38,6 @@ async def root() -> RedirectResponse:
     r_auth = requests.post(
         f"{ACCOUNT_URL}/oauth2_user/authorize2", params=payload
     )
-
-    print(r_auth.url)
 
     return RedirectResponse(r_auth.url)
 
@@ -91,12 +92,12 @@ async def get_measure_infomatoion(refresh_token: Union[str, None]) -> Any:
     return r_token
 
 
-@app.get("/get_measure_info")
-async def get_measure_infomation(access_token: Union[str, None]) -> Any:
+@app.get("/load_measures")
+async def load_measures(access_token: Union[str, None]) -> Any:
     if access_token is None:
         return {"error": "access_tokenがありません"}
     now_date = datetime.datetime.now()
-    start_date = now_date - relativedelta(months=1)
+    start_date = now_date - relativedelta(months=3)
 
     # GET Some info with this token
     headers = {"Authorization": "Bearer " + access_token}
@@ -113,7 +114,8 @@ async def get_measure_infomation(access_token: Union[str, None]) -> Any:
         f"{WBSAPI_URL}/measure", headers=headers, params=payload
     ).json()
 
-    return r_metrics
+    measures = fetch_weights_from_json(r_metrics["body"]["measuregrps"])
+    return measures
 
 
 def main() -> None:
