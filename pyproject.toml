@@ -4,7 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["matsunagadaiki151"]
 readme = "README.md"
-packages = [{include = "withings_fastapi", from = "src"}]
+packages = [{include = "withings_fastapi", from = "src"},
+            {include = "utils"}]
+
 
 [tool.poetry.dependencies]
 python = "^3.10"

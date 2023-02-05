@@ -28,7 +28,7 @@ class Token:
 
     def save_token(self, token: str, file_path: str) -> None:
         """save token to pickle"""
-        with open(file_path, "wb", encoding="utf8") as f:
+        with open(file_path, "wb") as f:
             pickle.dump(token, f)
 
     def load_token(self, file_path: str) -> str:
@@ -44,6 +44,6 @@ class Token:
         str
             loaded_token
         """
-        with open(file_path, "rb", encoding="utf8") as f:
+        with open(file_path, "rb") as f:
             token: str = pickle.load(f)
         return token
