@@ -5,16 +5,11 @@ from typing import Any, Union
 import requests
 import uvicorn
 from dateutil.relativedelta import relativedelta
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
+from load_env import load_env
 
-
-def load_env() -> None:
-    load_dotenv(verbose=True)
-    dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
-    load_dotenv(dotenv_path)
-
+load_env()
 
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CUSTOMER_SECRET = os.environ.get("CUSTOMER_SECRET")
