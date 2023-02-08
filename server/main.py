@@ -7,8 +7,8 @@ import uvicorn
 from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from processer import fetch_weights_from_json
 
+from server.processer import fetch_weights_from_json
 from utils.load_env import load_env
 
 load_env()

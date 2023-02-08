@@ -5,7 +5,8 @@ description = ""
 authors = ["matsunagadaiki151"]
 readme = "README.md"
 packages = [{include = "withings_fastapi", from = "src"},
-            {include = "utils"}]
+            {include = "utils"},
+            {include = "server"}]
 
 
 [tool.poetry.dependencies]
@@ -21,6 +22,7 @@ python-dateutil = "^2.8.2"
 types-python-dateutil = "^2.8.19.6"
 virtualenv = "^20.17.1"
 pre-commit = "^3.0.1"
+plotly = "^5.13.0"
 
 [tool.poetry.scripts]
 start = "server.main:main"

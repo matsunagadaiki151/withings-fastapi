@@ -32,18 +32,7 @@ class Token:
             pickle.dump(token, f)
 
     def load_token(self, file_path: str) -> str:
-        """load pickled token
-
-        Parameters
-        ----------
-        file_path : str
-            file_path
-
-        Returns
-        -------
-        str
-            loaded_token
-        """
+        """load pickled token"""
         with open(file_path, "rb") as f:
             token: str = pickle.load(f)
         return token
