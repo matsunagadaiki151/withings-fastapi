@@ -73,11 +73,18 @@ else:
         f"{url}/load_measures", headers=headers, params=token_params
     ).json()
 
-    weights_dic = {
-        datetime.datetime.strptime(k, "%Y/%m/%d"): v
-        for k, v in response_weights.items()
-    }
+    weights_dic = {k: v for k, v in response_weights.items()}
 
-    fig = px.line(x=weights_dic.keys(), y=weights_dic.values())
+    date_weights_dic_keys = [
+        datetime.datetime.strptime(k, "%Y/%m/%d") for k in weights_dic.keys()
+    ]
+
+    fig = px.line(x=date_weights_dic_keys, y=weights_dic.values())
+
+    today_str = datetime.date.today().strftime("%Y/%m/%d")
+    if today_str in weights_dic:
+        st.write(f"今日の体重 : {weights_dic[today_str]}kg")
+    else:
+        st.write("今日の体重はまだ測られていません")
 
     st.plotly_chart(fig)
