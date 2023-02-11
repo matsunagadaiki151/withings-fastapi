@@ -1,8 +1,5 @@
 import datetime
 import os
-import pickle
-from typing import Optional
-from xmlrpc.client import DateTime
 
 import plotly.express as px
 import requests
@@ -22,21 +19,9 @@ limit_time_path = "tokens/limit_time.pkl"
 
 headers = {"content-type": "application/json"}
 
-token = Token(url, headers)
-
-
-def save_limit_time(expiration_time: int, filename: str) -> None:
-    limit_time = datetime.datetime.now() + datetime.timedelta(
-        seconds=expiration_time
-    )
-    with open(filename, "wb") as f:
-        pickle.dump(limit_time, f)
-
-
-def load_limit_time(filename: str) -> Optional[DateTime]:
-    with open(filename, "rb") as f:
-        limit_time: Optional[DateTime] = pickle.load(f)
-    return limit_time
+token = Token(
+    url, headers, access_token_path, refresh_token_path, limit_time_path
+)
 
 
 if (
@@ -55,13 +40,8 @@ if (
         unsafe_allow_html=True,
     )
 elif not os.path.exists(access_token_path):
-    params = {
-        "code": st.experimental_get_query_params()["code"][0],
-    }
 
-    response_token = requests.get(
-        f"{url}/get_token", params=params, headers=headers
-    ).json()
+    token.fetch_access_token(st.experimental_get_query_params()["code"][0])
 
     st.write(
         """<p>
@@ -72,18 +52,19 @@ elif not os.path.exists(access_token_path):
         unsafe_allow_html=True,
     )
 
-    token.save_token(response_token["body"]["access_token"], access_token_path)
-    token.save_token(
-        response_token["body"]["refresh_token"], refresh_token_path
-    )
-    save_limit_time(response_token["body"]["expires_in"], limit_time_path)
     st.experimental_rerun()
 else:
     # Disable query params
     st.experimental_set_query_params()
 
-    limit_time = load_limit_time(limit_time_path)
+    limit_time = token.load_limit_time(limit_time_path)
     access_token = token.load_token(access_token_path)
+
+    # republish access token
+    if limit_time < datetime.datetime.now():
+        refresh_token = token.load_token(refresh_token_path)
+        token.fetch_refreshed_token(refresh_token)
+        access_token = token.load_token(access_token_path)
 
     token_params = {
         "access_token": access_token,
