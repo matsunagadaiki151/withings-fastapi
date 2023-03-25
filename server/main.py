@@ -35,7 +35,7 @@ async def root() -> RedirectResponse:
         "mode": "demo",  # Use demo mode, DELETE THIS FOR REAL APP
     }
 
-    r_auth = requests.post(
+    r_auth = requests.get(
         f"{ACCOUNT_URL}/oauth2_user/authorize2", params=payload
     )
 
