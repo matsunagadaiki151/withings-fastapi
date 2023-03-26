@@ -7,6 +7,7 @@ import uvicorn
 from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
+from starlette.middleware.cors import CORSMiddleware
 
 from server.processer import fetch_weights_from_json
 from utils.load_env import load_env
@@ -22,6 +23,14 @@ WBSAPI_URL = os.environ.get("WPSAPI_URL")
 CALLBACK_URI = os.environ.get("CALLBACK_URI")
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[f"{CALLBACK_URI}"],
+    allow_credentials=True,
+    allow_methods=["*"],  # 追記により追加
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
@@ -97,7 +106,7 @@ async def load_measures(access_token: Union[str, None]) -> Any:
     if access_token is None:
         return {"error": "access_tokenがありません"}
     now_date = datetime.datetime.now()
-    start_date = now_date - relativedelta(months=3)
+    start_date = now_date - relativedelta(months=1)
 
     # GET Some info with this token
     headers = {"Authorization": "Bearer " + access_token}
