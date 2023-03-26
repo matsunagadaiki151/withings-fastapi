@@ -17,7 +17,9 @@ def fetch_weights_from_json(measure_grps: Any) -> Dict[str, float]:
     for measure_grp in measure_grps:
         measure_date = datetime.datetime.fromtimestamp(measure_grp["date"])
         measure_date_str = measure_date.strftime("%Y/%m/%d")
-        weight = measure_grp["measures"][0]["value"] / 1000
+        weight = measure_grp["measures"][0]["value"] * (
+            10 ** measure_grp["measures"][0]["unit"]
+        )
         if measure_date_str not in weights:
             weights[measure_date_str] = PSEUDO_WEIGHT
         weights[measure_date_str] = min(weights[measure_date_str], weight)
