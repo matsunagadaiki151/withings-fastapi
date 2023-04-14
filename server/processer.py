@@ -1,6 +1,8 @@
 import datetime
 from typing import Any, Dict
 
+import requests
+
 PSEUDO_WEIGHT = 999999999.0
 
 
@@ -25,3 +27,18 @@ def fetch_weights_from_json(measure_grps: Any) -> Dict[str, float]:
         weights[measure_date_str] = min(weights[measure_date_str], weight)
 
     return weights
+
+
+def calc_limit_time(expiration_time: int) -> datetime.datetime:
+    limit_time = datetime.datetime.now() + datetime.timedelta(
+        seconds=expiration_time
+    )
+    return limit_time
+
+
+def write_tokens_to_json_server(
+    payload: Dict[str, str], db_endpoint: str
+) -> None:
+    headers = {"Content-Type": "application/json"}
+
+    requests.patch(db_endpoint, headers=headers, json=payload)

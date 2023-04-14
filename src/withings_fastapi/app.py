@@ -12,26 +12,27 @@ st.title("今日の私の体重")
 
 load_env()
 
+
 url = os.environ.get("ENDPOINT")
-access_token_path = "tokens/access_token.pkl"
-refresh_token_path = "tokens/refresh_token.pkl"
-limit_time_path = "tokens/limit_time.pkl"
 
 headers = {"content-type": "application/json"}
 
-token = Token(
-    url, headers, access_token_path, refresh_token_path, limit_time_path
-)
+tokens = requests.get(
+    f"{url}/load_token_from_json_server",
+    headers=headers,
+).json()
 
+token_management = Token(url, headers)
 
-if (
-    not os.path.exists(access_token_path)
-    and "code" not in st.experimental_get_query_params()
+if "code" not in st.experimental_get_query_params() and (
+    tokens is None
+    or tokens["accessToken"] == ""
+    or tokens["accessToken"] is None
 ):
     st.write(
         f"""
         <a target="_self" href="
-    {url}">
+        {url}">
             <button>
                 Get Access Token
             </button>
@@ -39,9 +40,14 @@ if (
         """,
         unsafe_allow_html=True,
     )
-elif not os.path.exists(access_token_path):
-
-    token.fetch_access_token(st.experimental_get_query_params()["code"][0])
+elif (
+    tokens is None
+    or tokens["accessToken"] == ""
+    or tokens["accessToken"] is None
+):
+    token_management.fetch_access_token(
+        st.experimental_get_query_params()["code"][0]
+    )
 
     st.write(
         """<p>
@@ -57,14 +63,18 @@ else:
     # Disable query params
     st.experimental_set_query_params()
 
-    limit_time = token.load_limit_time(limit_time_path)
-    access_token = token.load_token(access_token_path)
+    access_token = str(tokens["accessToken"])
+    refresh_token = str(tokens["refreshToken"])
+    str_limit_time = str(tokens["limitTime"])
+    limit_time = datetime.datetime.strptime(
+        str_limit_time, "%Y-%m-%d %H:%M:%S"
+    )
 
-    # republish access token
-    if limit_time < datetime.datetime.now():
-        refresh_token = token.load_token(refresh_token_path)
-        token.fetch_refreshed_token(refresh_token)
-        access_token = token.load_token(access_token_path)
+    if datetime.datetime.now() > limit_time:
+        token_management.fetch_refreshed_token(refresh_token)
+
+        # Access Tokenを取得するために再起動する。
+        st.experimental_rerun()
 
     token_params = {
         "access_token": access_token,

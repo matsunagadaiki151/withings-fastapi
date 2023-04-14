@@ -1,64 +1,34 @@
 import datetime
 import pickle
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 from xmlrpc.client import DateTime
 
 import requests
+from requests import Response
 
 
 class Token:
     """Class about Token"""
 
-    def __init__(
-        self,
-        url: str,
-        headers: Dict[str, str],
-        access_token_path: str,
-        refresh_token_path: str,
-        limit_time_path: str,
-    ):
+    def __init__(self, url: str, headers: Dict[str, str]):
         self.url = url
         self.headers = headers
-        self.access_token_path = access_token_path
-        self.refresh_token_path = refresh_token_path
-        self.limit_time_path = limit_time_path
 
-    def fetch_access_token(self, auth_code: str) -> None:
-        params = {
-            "code": auth_code,
-        }
+    def fetch_access_token(self, auth_code: str) -> Response:
+        data = {"code": auth_code}
 
-        response_token = requests.get(
-            f"{self.url}/get_token", params=params, headers=self.headers
-        ).json()
+        response = requests.post(
+            f"{self.url}/get_token", params=data, headers=self.headers
+        )
 
-        self.save_tokens(response_token)
+        return response
 
     def fetch_refreshed_token(self, refresh_token: str) -> None:
         """Re-get access token from refresh token."""
-        response_refresh = requests.get(
-            f"{self.url}/refresh_token",
-            headers=self.headers,
-            params={"refresh_token": refresh_token},
-        ).json()
 
-        self.save_tokens(response_refresh)
-
-    def save_token(self, token: str, file_path: str) -> None:
-        """save token to pickle"""
-        with open(file_path, "wb") as f:
-            pickle.dump(token, f)
-
-    def save_tokens(self, response: Any) -> None:
-        self.save_token(
-            str(response["body"]["access_token"]), self.access_token_path
-        )
-        self.save_token(
-            str(response["body"]["refresh_token"]),
-            self.refresh_token_path,
-        )
-        self.save_limit_time(
-            int(response["body"]["expires_in"]), self.limit_time_path
+        data = {"refresh_token": refresh_token}
+        requests.post(
+            f"{self.url}/refresh_token", headers=self.headers, params=data
         )
 
     def load_token(self, file_path: str) -> str:
