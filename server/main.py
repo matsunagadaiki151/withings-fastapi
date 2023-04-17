@@ -148,9 +148,7 @@ async def fetch_refresh_token(refresh_token: str) -> Any:
 
 
 @app.post("/refresh_token", response_model=None)
-async def update_refresh_token(
-    refresh_token: Union[str, None]
-) -> Union[RedirectResponse, Dict[str, str]]:
+async def update_refresh_token(refresh_token: Union[str, None]) -> None:
 
     if refresh_token is None or refresh_token == "":
         raise TypeError("refresh_token is not defined")
@@ -173,22 +171,21 @@ async def update_refresh_token(
         f"{WBSAPI_URL}/v2/oauth2", headers=headers, params=payload
     ).json()
 
-    limit_time = calc_limit_time(r_token["body"]["expires_in"])
-    # limitTimeをstrに置き換える。
-    str_limit_time = limit_time.strftime("%Y-%m-%d %H:%M:%S")
+    if r_token["status"] != 601:
+        limit_time = calc_limit_time(r_token["body"]["expires_in"])
+        # limitTimeをstrに置き換える。
+        str_limit_time = limit_time.strftime("%Y-%m-%d %H:%M:%S")
 
-    json_server_payload: Dict[str, str] = {
-        "accessToken": r_token["body"]["access_token"],
-        "refreshToken": r_token["body"]["refresh_token"],
-        "limitTime": str_limit_time,
-    }
+        json_server_payload: Dict[str, str] = {
+            "accessToken": r_token["body"]["access_token"],
+            "refreshToken": r_token["body"]["refresh_token"],
+            "limitTime": str_limit_time,
+        }
 
-    if type(JSON_SERVER_URL) == str:
-        write_tokens_to_json_server(
-            json_server_payload, f"{JSON_SERVER_URL}/tokens"
-        )
-
-    return RedirectResponse(CALLBACK_URI)
+        if type(JSON_SERVER_URL) == str:
+            write_tokens_to_json_server(
+                json_server_payload, f"{JSON_SERVER_URL}/tokens"
+            )
 
 
 @app.get("/load_token_from_json_server")
